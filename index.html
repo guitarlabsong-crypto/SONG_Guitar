@@ -2,234 +2,227 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Song Young-min Guitar Lab - Simulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Song Young-min Guitar Lab - Mobile</title>
     <style>
         :root {
-            --fretboard-bg: #4e342e; 
-            --fret-color: #d1d1d1;
-            --string-color: #bdc3c7;
-            --nut-color: #fff;
-            --finger-color: #ffc107;
+            --bg-navy: #0a192f;
+            --fretboard-wood: #3e2723;
+            --string-gold: #ffd700;
+            --head-color: #263238;
         }
 
         body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-navy);
+            color: white;
+            font-family: sans-serif;
+            overflow: hidden; /* 모바일 스크롤 완전 방지 */
+            touch-action: none; /* 브라우저 기본 제스처 무시 */
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
             height: 100vh;
-            background-color: #1a1a1a;
-            margin: 0;
-            font-family: 'Pretendard', sans-serif;
-            color: white;
-            overflow: hidden; /* 스크롤 방지 */
         }
 
-        .container {
+        /* 전체 레이아웃 (가로 스크롤 가능 구역) */
+        .guitar-container {
             display: flex;
-            align-items: flex-start;
-            position: relative;
-            background: #222;
-            padding: 40px 20px;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            align-items: center;
+            height: 70%;
+            margin-top: auto;
+            margin-bottom: auto;
+            overflow-x: auto; /* 지판 이동용 */
+            -webkit-overflow-scrolling: touch;
+            padding-left: 20px;
         }
 
-        /* 워터마크 */
-        .watermark {
-            position: absolute;
-            bottom: 15px;
-            right: 20px;
-            font-size: 14px;
-            color: rgba(255,255,255,0.3);
-            letter-spacing: 1px;
+        /* 기타 헤드 */
+        .guitar-head {
+            min-width: 120px;
+            height: 220px;
+            background: var(--head-color);
+            border-radius: 20px 0 0 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 10px;
+            border: 2px solid #1a1a1a;
+        }
+        .tuner {
+            width: 25px;
+            height: 15px;
+            background: #90a4ae;
+            border-radius: 3px;
         }
 
         /* 지판 구역 */
-        .fretboard {
+        .fretboard-wrapper {
             display: flex;
+            background: var(--fretboard-wood);
+            height: 220px;
             position: relative;
-            background: var(--fretboard-bg);
-            height: 240px;
-            border-top: 2px solid #333;
-            border-bottom: 2px solid #333;
+            border-top: 2px solid #1a1a1a;
+            border-bottom: 2px solid #1a1a1a;
         }
 
         .nut {
-            width: 15px;
-            background: var(--nut-color);
+            width: 10px;
+            background: #eee;
             height: 100%;
-            z-index: 10;
         }
 
         .fret {
             position: relative;
-            border-right: 4px solid var(--fret-color);
-            height: 100%;
+            border-right: 3px solid #b0bec5;
+            min-width: 60px;
             display: flex;
             flex-direction: column;
         }
 
-        /* 프렛 번호 */
-        .fret-number {
+        .fret-num {
             position: absolute;
-            bottom: -30px;
+            top: -25px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 14px;
-            color: #888;
+            font-size: 12px;
+            color: #5c6bc0;
         }
 
-        /* 스트로크 구역 */
-        .stroke-area {
+        /* 스트로크 구역 (모바일 터치용) */
+        .stroke-zone {
+            min-width: 180px;
+            height: 220px;
+            background: rgba(0,0,0,0.3);
             position: relative;
-            width: 250px;
-            height: 240px;
-            background: #261a17;
-            border-left: 5px solid #000;
+            border-left: 4px solid #000;
+            touch-action: none; /* 터치 이벤트 가로채기 */
         }
 
-        /* 줄 스타일 */
-        .string-line {
+        /* 줄 설정 */
+        .string {
             position: absolute;
             left: 0;
             width: 100%;
-            background: var(--string-color);
+            background: var(--string-gold);
             z-index: 5;
             pointer-events: none;
         }
+        .s1 { top: 10%; height: 1px; }
+        .s2 { top: 26%; height: 1.5px; }
+        .s3 { top: 42%; height: 2px; }
+        .s4 { top: 58%; height: 2.5px; }
+        .s5 { top: 74%; height: 3px; }
+        .s6 { top: 90%; height: 3.5px; }
 
-        /* 1번줄이 위쪽 */
-        .l1 { top: 12.5%; height: 1.5px; }
-        .l2 { top: 27.5%; height: 2px; }
-        .l3 { top: 42.5%; height: 2.5px; }
-        .l4 { top: 57.5%; height: 3px; }
-        .l5 { top: 72.5%; height: 3.5px; }
-        .l6 { top: 87.5%; height: 4px; }
-
+        /* 클릭 포인트 */
         .fret-cell {
             flex: 1;
-            width: 100%;
-            z-index: 7;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
+            z-index: 10;
         }
 
-        /* 손가락 마크 */
         .finger {
-            width: 32px;
-            height: 32px;
-            background: var(--finger-color);
+            width: 28px;
+            height: 28px;
+            background: #ffeb3b;
             border-radius: 50%;
-            color: #000;
-            font-weight: 800;
-            font-size: 14px;
+            color: black;
+            font-weight: bold;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 15px rgba(255,193,7,0.5);
-            z-index: 20;
-            animation: pop 0.2s ease-out;
+            margin: auto;
+            font-size: 12px;
+            box-shadow: 0 0 8px #ffeb3b;
         }
 
-        @keyframes pop {
-            0% { transform: scale(0.5); }
-            100% { transform: scale(1); }
+        .watermark {
+            position: fixed;
+            bottom: 10px;
+            right: 15px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.2);
         }
 
-        .controls {
-            margin-top: 50px;
+        .guide {
             text-align: center;
-            background: rgba(255,255,255,0.05);
-            padding: 15px 30px;
-            border-radius: 10px;
-        }
-
-        kbd {
-            background: #444;
-            padding: 3px 8px;
-            border-radius: 4px;
-            color: #ffc107;
-            font-family: monospace;
+            font-size: 14px;
+            color: #7986cb;
+            padding: 10px;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="fretboard" id="fretboard">
-            <div class="nut"><div class="fret-number">0</div></div>
+    <div class="guide">지판을 눌러 코드를 잡고, 오른쪽 영역을 위아래로 쓸어보세요!</div>
+
+    <div class="guitar-container">
+        <div class="guitar-head">
+            <div class="tuner"></div><div class="tuner"></div><div class="tuner"></div>
+            <div style="font-size: 10px; text-align: center; color: #555;">Song Lab</div>
+            <div class="tuner"></div><div class="tuner"></div><div class="tuner"></div>
+        </div>
+
+        <div class="fretboard-wrapper" id="fretboard">
+            <div class="nut"></div>
             </div>
 
-        <div class="stroke-area" id="strokeArea"></div>
-
-        <div class="watermark">© Song Young-min Guitar Lab</div>
+        <div class="stroke-zone" id="strokeZone">
+            <div class="string s1"></div><div class="string s2"></div>
+            <div class="string s3"></div><div class="string s4"></div>
+            <div class="string s5"></div><div class="string s6"></div>
+        </div>
     </div>
 
-    <div class="controls">
-        <p>🖱️ <b>지판 클릭:</b> 코드 운지 (다시 누르면 취소) | 🎹 <b>방향키 & Space:</b> 스트로크/피킹</p>
-        <p><kbd>↑</kbd> <kbd>↓</kbd> 전체 스트로크 | <kbd>←</kbd> <kbd>→ / Space</kbd> 저음/고음부 피킹</p>
-    </div>
+    <div class="watermark">© Song Young-min Guitar Lab</div>
 
 <script>
     const fretboard = document.getElementById('fretboard');
-    const strokeArea = document.getElementById('strokeArea');
+    const strokeZone = document.getElementById('strokeZone');
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     const stringNotes = ['E', 'B', 'G', 'D', 'A', 'E'];
     const openFreqs = [329.63, 246.94, 196.00, 146.83, 110.00, 82.41];
     const notesMaster = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-
     let activeFrets = [0, 0, 0, 0, 0, 0];
 
-    // 1. 1~13프렛 생성
+    // 1. 지판 생성
     for (let f = 1; f <= 13; f++) {
         const fretDiv = document.createElement('div');
         fretDiv.className = 'fret';
-        fretDiv.style.width = (110 * Math.pow(0.945, f)) + 'px';
-
+        fretDiv.style.minWidth = (80 * Math.pow(0.95, f)) + 'px';
+        
         const num = document.createElement('div');
-        num.className = 'fret-number';
+        num.className = 'fret-num';
         num.innerText = f;
         fretDiv.appendChild(num);
 
         for (let s = 0; s < 6; s++) {
             const cell = document.createElement('div');
             cell.className = 'fret-cell';
-            cell.onclick = () => toggleFret(s, f);
+            cell.onclick = () => {
+                activeFrets[s] = (activeFrets[s] === f) ? 0 : f;
+                render();
+            };
             fretDiv.appendChild(cell);
         }
         fretboard.appendChild(fretDiv);
     }
 
-    // 2. 줄 그리기
-    for (let s = 0; s < 6; s++) {
-        const fLine = document.createElement('div');
-        fLine.className = `string-line l${s+1}`;
-        fretboard.appendChild(fLine);
-
-        const sLine = document.createElement('div');
-        sLine.className = `string-line l${s+1}`;
-        strokeArea.appendChild(sLine);
+    // 2. 줄 렌더링 (지판 위)
+    for (let s = 1; s <= 6; s++) {
+        const line = document.createElement('div');
+        line.className = `string s${s}`;
+        fretboard.appendChild(line);
     }
 
-    function toggleFret(s, f) {
-        if (activeFrets[s] === f) activeFrets[s] = 0;
-        else activeFrets[s] = f;
-        renderFingers();
-    }
-
-    function renderFingers() {
+    function render() {
         document.querySelectorAll('.finger').forEach(f => f.remove());
         activeFrets.forEach((fret, sIdx) => {
             if (fret > 0) {
-                // n번째 프렛의 s번째 cell 찾기
                 const targetFret = fretboard.querySelectorAll('.fret')[fret-1];
                 const targetCell = targetFret.querySelectorAll('.fret-cell')[sIdx];
-                
                 const finger = document.createElement('div');
                 finger.className = 'finger';
                 const startIdx = notesMaster.indexOf(stringNotes[sIdx]);
@@ -239,43 +232,47 @@
         });
     }
 
-    // 사운드 함수
+    // 3. 모바일 스트로크 로직 (Touch Swipe)
+    let lastStrungTime = 0;
+    let lastY = 0;
+
+    strokeZone.addEventListener('touchstart', (e) => {
+        lastY = e.touches[0].clientY;
+        playAll(0.05); // 터치 시 즉시 약한 스트로크
+    });
+
+    strokeZone.addEventListener('touchmove', (e) => {
+        const currentY = e.touches[0].clientY;
+        const diff = Math.abs(currentY - lastY);
+        
+        // 일정 거리 이상 움직이면 소리 재생 (스트로크 효과)
+        if (diff > 30 && Date.now() - lastStrungTime > 100) {
+            playAll(0.03);
+            lastStrungTime = Date.now();
+            lastY = currentY;
+        }
+    });
+
     function playNote(s, delay = 0) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         const fret = activeFrets[s];
         const freq = openFreqs[s] * Math.pow(2, fret / 12);
         
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
-
-        gain.gain.setValueAtTime(0.5, audioCtx.currentTime + delay);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 1);
-
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.8);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-
         osc.start(audioCtx.currentTime + delay);
-        osc.stop(audioCtx.currentTime + delay + 1);
+        osc.stop(audioCtx.currentTime + delay + 0.8);
     }
 
-    // 3. 키보드 이벤트 (스크롤 방지 및 스트로크)
-    window.addEventListener('keydown', (e) => {
-        if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
-            e.preventDefault(); // 스크롤 방지
-        }
-
-        if (e.key === 'ArrowDown') { // 다운 스트로크
-            for(let i=0; i<6; i++) playNote(i, i * 0.03);
-        } else if (e.key === 'ArrowUp') { // 업 스트로크
-            for(let i=5; i>=0; i--) playNote(i, (5-i) * 0.03);
-        } else if (e.key === 'ArrowLeft') { // 저음부 (4,5,6번줄)
-            [3, 4, 5].forEach(i => playNote(i));
-        } else if (e.key === 'ArrowRight' || e.key === ' ') { // 고음부 (1,2,3번줄)
-            [0, 1, 2].forEach(i => playNote(i));
-        }
-    });
+    function playAll(gap) {
+        for(let i=0; i<6; i++) playNote(i, i * gap);
+    }
 </script>
 </body>
 </html>
