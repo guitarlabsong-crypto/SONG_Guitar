@@ -2,171 +2,258 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Interactive Guitar Fretboard</title>
+    <title>Guitar Fretboard & Stroke Area</title>
     <style>
         :root {
-            --fretboard-bg: #3d2b1f; /* 진한 나무색 */
-            --fret-color: #b8b8b8;   /* 은색 프렛 */
-            --string-color: #e0e0e0; /* 줄 색상 */
-            --nut-color: #f5f5f5;    /* 너트(상악골) 색상 */
+            --fretboard-bg: #4e342e; /* 나무색 */
+            --fret-color: #d1d1d1;
+            --string-color: #bdc3c7;
+            --nut-color: #fff;
+            --finger-color: rgba(255, 193, 7, 0.9); /* 손가락 마크 색상 */
         }
 
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #222;
+            background-color: #1a1a1a;
             margin: 0;
-            overflow-x: auto;
+            font-family: Arial, sans-serif;
+            color: white;
         }
 
+        .container {
+            display: flex;
+            align-items: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* 1. 지판 구역 (1~12프렛) */
         .fretboard {
             display: flex;
             position: relative;
             background: var(--fretboard-bg);
-            height: 200px;
-            padding-right: 20px;
-            border-radius: 4px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            height: 240px;
         }
 
-        /* 너트 (0프렛) */
         .nut {
-            width: 15px;
+            width: 12px;
             background: var(--nut-color);
             height: 100%;
-            z-index: 2;
+            z-index: 10;
         }
 
-        /* 프렛 스타일 */
         .fret {
             position: relative;
+            border-right: 4px solid var(--fret-color);
+            height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            border-right: 3px solid var(--fret-color);
-            /* 실제 기타처럼 고음 프렛으로 갈수록 좁아지는 시각적 효과 */
-            min-width: 50px; 
-            padding: 0 5px;
+            justify-content: space-around;
         }
 
-        /* 기타 줄 */
-        .string {
+        /* 2. 스트로크 구역 (13프렛 이후) */
+        .stroke-area {
+            position: relative;
+            width: 300px; /* 스트로크를 위해 넉넉한 공간 */
+            height: 240px;
+            background: #2c1e1a; /* 지판보다 조금 어두운 바디 느낌 */
+            border-left: 2px solid #000;
+        }
+
+        /* 공통 줄 스타일 */
+        .string-line {
             position: absolute;
             left: 0;
             width: 100%;
             background: var(--string-color);
-            z-index: 1;
+            z-index: 5;
+            pointer-events: none; /* 줄 자체는 클릭 방해 안 함 */
+        }
+
+        /* 스트로크 구역의 줄 (클릭 가능) */
+        .stroke-string {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 30px; /* 클릭 영역 확보 */
             cursor: pointer;
-            transition: background 0.1s;
+            z-index: 6;
+            display: flex;
+            align-items: center;
         }
-
-        .string:hover {
+        .stroke-string:hover .string-line {
             background: #fff;
-            box-shadow: 0 0 10px #fff;
+            box-shadow: 0 0 8px #fff;
         }
 
-        /* 줄 번호별 두께 조절 (6번줄이 제일 두꺼움) */
-        .s6 { height: 4px; top: 10%; }
-        .s5 { height: 3.5px; top: 26%; }
-        .s4 { height: 3px; top: 42%; }
-        .s3 { height: 2.5px; top: 58%; }
-        .s2 { height: 2px; top: 74%; }
-        .s1 { height: 1.5px; top: 90%; }
+        /* 1번 줄이 맨 위 (E4 -> E2 순서) */
+        .l1 { top: 12.5%; height: 1.5px; }
+        .l2 { top: 27.5%; height: 2px; }
+        .l3 { top: 42.5%; height: 2.5px; }
+        .l4 { top: 57.5%; height: 3px; }
+        .l5 { top: 72.5%; height: 3.5px; }
+        .l6 { top: 87.5%; height: 4px; }
 
-        /* 포지션 마크 (점) */
-        .dot {
-            position: absolute;
-            bottom: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #888;
-            font-size: 12px;
-            font-family: Arial, sans-serif;
+        /* 클릭 가능한 프렛 칸 (버튼 역할) */
+        .fret-cell {
+            flex: 1;
+            width: 100%;
+            z-index: 7;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
         }
 
-        .inlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 12px;
-            height: 12px;
-            background: rgba(255,255,255,0.2);
+        /* 3. 가상 손가락 동그라미 */
+        .finger {
+            width: 28px;
+            height: 28px;
+            background: var(--finger-color);
             border-radius: 50%;
-            z-index: 0;
+            color: #000;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 20;
         }
+
+        .label { margin-bottom: 20px; font-size: 1.2rem; color: #aaa; }
     </style>
 </head>
 <body>
 
-<div class="fretboard" id="fretboard">
-    <div class="nut"></div>
+    <div class="label">왼쪽 지판에서 코드를 잡고, 오른쪽 줄을 튕겨보세요!</div>
+
+    <div class="container">
+        <div class="fretboard" id="fretboard">
+            <div class="nut"></div>
+            </div>
+
+        <div class="stroke-area" id="strokeArea">
+            </div>
     </div>
 
 <script>
     const fretboard = document.getElementById('fretboard');
-    const totalFrets = 15;
-    const stringCount = 6;
-    
-    // 표준 튜닝 주파수 (E2 ~ E4)
-    const openStrings = [329.63, 246.94, 196.00, 146.83, 110.00, 82.41]; 
+    const strokeArea = document.getElementById('strokeArea');
 
-    // 프렛 생성 루프
-    for (let i = 1; i <= totalFrets; i++) {
+    // 1번줄(E4) ~ 6번줄(E2) 설정
+    const stringNotes = ['E', 'B', 'G', 'D', 'A', 'E'];
+    const openFrequencies = [329.63, 246.94, 196.00, 146.83, 110.00, 82.41];
+    const notesMaster = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+    // 각 줄마다 현재 눌린 프렛 상태 저장 (0은 개방현)
+    let activeFrets = [0, 0, 0, 0, 0, 0];
+
+    // 음이름 계산 함수
+    function getNoteName(stringIdx, fret) {
+        const startNote = stringNotes[stringIdx];
+        const startIndex = notesMaster.indexOf(startNote);
+        return notesMaster[(startIndex + fret) % 12];
+    }
+
+    // 1. 지판 생성 (1~12프렛)
+    for (let f = 1; f <= 12; f++) {
         const fretDiv = document.createElement('div');
         fretDiv.className = 'fret';
-        
-        // 프렛 너비를 점차 좁게 설정 (수학적 비율 반영)
-        fretDiv.style.width = (80 * Math.pow(0.95, i)) + 'px';
+        fretDiv.style.width = (100 * Math.pow(0.94, f)) + 'px';
 
-        // 포지션 마크 표시 (3, 5, 7, 9, 12, 15번 프렛)
-        const dots = [3, 5, 7, 9, 12, 15];
-        if (dots.includes(i)) {
-            const dotLabel = document.createElement('span');
-            dotLabel.className = 'dot';
-            dotLabel.innerText = i;
-            fretDiv.appendChild(dotLabel);
-            
-            const inlay = document.createElement('div');
-            inlay.className = 'inlay';
-            fretDiv.appendChild(inlay);
+        for (let s = 0; s < 6; s++) {
+            const cell = document.createElement('div');
+            cell.className = 'fret-cell';
+            cell.dataset.string = s;
+            cell.dataset.fret = f;
+
+            cell.onclick = (e) => {
+                const sIdx = parseInt(cell.dataset.string);
+                const fIdx = parseInt(cell.dataset.fret);
+
+                // 두 번 누르면 취소 로직
+                if (activeFrets[sIdx] === fIdx) {
+                    activeFrets[sIdx] = 0;
+                    renderFingers();
+                } else {
+                    activeFrets[sIdx] = fIdx;
+                    renderFingers();
+                }
+            };
+            fretDiv.appendChild(cell);
         }
-
         fretboard.appendChild(fretDiv);
     }
 
-    // 줄 생성 및 클릭 이벤트
-    openStrings.forEach((freq, idx) => {
-        const stringElem = document.createElement('div');
-        stringElem.className = `string s${idx + 1}`;
-        
-        // 클릭 시 소리 재생 (Web Audio API)
-        stringElem.onclick = () => playGuitarSound(freq);
-        
-        fretboard.appendChild(stringElem);
-    });
+    // 2. 가로 줄 그리기 (지판 & 스트로크 구역 공통)
+    function drawStrings() {
+        for (let s = 0; s < 6; s++) {
+            // 지판 위 줄
+            const fLine = document.createElement('div');
+            fLine.className = `string-line l${s+1}`;
+            fretboard.appendChild(fLine);
 
-    // 간단한 사운드 엔진
-    function playGuitarSound(frequency) {
+            // 스트로크 구역 줄
+            const sWrapper = document.createElement('div');
+            sWrapper.className = `stroke-string l${s+1}`;
+            sWrapper.style.top = (12.5 + s*15) + '%'; // 위치 조정
+            
+            const sLine = document.createElement('div');
+            sLine.className = `string-line`;
+            sLine.style.top = '50%';
+            sLine.style.height = (1.5 + s*0.5) + 'px';
+            
+            sWrapper.appendChild(sLine);
+            sWrapper.onclick = () => playNote(s);
+            strokeArea.appendChild(sWrapper);
+        }
+    }
+    drawStrings();
+
+    // 3. 손가락 마크(동그라미) 렌더링
+    function renderFingers() {
+        // 기존 마크 제거
+        document.querySelectorAll('.finger').forEach(f => f.remove());
+
+        activeFrets.forEach((fret, sIdx) => {
+            if (fret > 0) {
+                const targetCell = document.querySelector(`.fret-cell[data-string="${sIdx}"][data-fret="${fret}"]`);
+                const finger = document.createElement('div');
+                finger.className = 'finger';
+                finger.innerText = getNoteName(sIdx, fret);
+                targetCell.appendChild(finger);
+            }
+        });
+    }
+
+    // 4. 사운드 재생
+    function playNote(stringIdx) {
+        const fret = activeFrets[stringIdx];
+        const freq = openFrequencies[stringIdx] * Math.pow(2, fret / 12);
+        
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
 
-        oscillator.type = 'triangle'; // 기타와 유사한 부드러운 파형
-        oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
 
-        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+        gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
 
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
 
-        oscillator.start();
-        oscillator.stop(audioCtx.currentTime + 1);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 1.5);
     }
 </script>
-
 </body>
 </html>
