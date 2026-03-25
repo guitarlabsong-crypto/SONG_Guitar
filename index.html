@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Song Young-min Guitar Lab</title>
+    <title>Song Young-min Guitar Lab - Mobile Fix</title>
     <style>
         :root {
             --navy-bg: #0a192f;
@@ -14,55 +14,71 @@
 
         body {
             margin: 0; background: var(--navy-bg); color: white;
-            font-family: 'Pretendard', sans-serif; overflow: hidden;
+            font-family: sans-serif; overflow: hidden;
             touch-action: none; display: flex; flex-direction: column; height: 100vh;
         }
 
-        /* 기타 본체 레이아웃 */
-        .guitar-body {
-            display: flex; align-items: center; margin: auto 0;
-            padding-left: 10px; height: 260px; position: relative;
+        /* 메인 컨테이너: 헤드+지판(스크롤) / 스트로크(고정) */
+        .main-wrapper {
+            display: flex;
+            align-items: center;
+            height: 280px;
+            margin: auto 0;
+            position: relative;
+            width: 100vw;
         }
 
-        /* 1. 개선된 기타 헤드 모양 */
+        /* 1. 왼쪽 지판 스크롤 영역 */
+        .fretboard-scroll {
+            display: flex;
+            overflow-x: auto; /* 가로 스크롤 허용 */
+            flex: 1;
+            height: 100%;
+            align-items: center;
+            scrollbar-width: none; /* 파이어폭스 스크롤바 숨김 */
+            -webkit-overflow-scrolling: touch;
+            padding-right: 50px; /* 스트로크 영역과 겹치지 않게 여백 */
+        }
+        .fretboard-scroll::-webkit-scrollbar { display: none; } /* 크롬 스크롤바 숨김 */
+
+        /* 기타 헤드 (고정 느낌을 위해 스크롤 컨테이너 맨 앞에 위치) */
         .headstock {
-            width: 100px; height: 200px; background: #1a1a1a;
-            border-radius: 10px 30px 30px 10px; position: relative;
+            min-width: 90px; height: 180px; background: #1a1a1a;
+            border-radius: 15px 40px 40px 15px; position: relative;
             border: 2px solid #333; flex-shrink: 0;
-            display: flex; flex-wrap: wrap; justify-content: space-around; padding: 10px;
+            display: flex; flex-direction: column; justify-content: space-around; padding: 5px;
         }
-        .peg {
-            width: 20px; height: 12px; background: #777; border-radius: 4px;
-        }
+        .peg { width: 18px; height: 10px; background: #777; border-radius: 3px; margin: 2px auto; }
 
-        /* 2. 지판 (1~13프렛) */
+        /* 지판 */
         .fretboard {
             display: flex; background: var(--wood); height: 220px;
             position: relative; border-top: 4px solid #222; border-bottom: 4px solid #222;
         }
-        .nut { width: 12px; background: #fff; height: 100%; z-index: 10; }
+        .nut { min-width: 12px; background: #fff; height: 100%; z-index: 10; }
         
         .fret {
             position: relative; border-right: 3px solid var(--fret-gold);
-            display: flex; flex-direction: column; min-width: 65px;
+            display: flex; flex-direction: column; min-width: 70px; /* 모바일 터치 적당한 크기 */
         }
         .fret-num {
             position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%);
-            font-size: 12px; color: #8892b0;
+            font-size: 11px; color: #8892b0;
         }
 
-        /* 3. 스트로크 구역 (반응형 영역) */
-        .stroke-box {
-            width: 180px; height: 220px; background: rgba(0,0,0,0.4);
-            border-left: 5px solid #000; position: relative; touch-action: none;
+        /* 2. 오른쪽 스트로크 구역 (화면 우측 고정) */
+        .stroke-fixed {
+            width: 120px; height: 220px; background: rgba(0,0,0,0.6);
+            border-left: 4px solid #64ffda; position: absolute; right: 0;
+            z-index: 100; touch-action: none;
+            box-shadow: -10px 0 20px rgba(0,0,0,0.5);
         }
 
         /* 줄 디자인 */
         .string {
             position: absolute; left: 0; width: 100%; background: var(--string-silver);
-            z-index: 5; pointer-events: none; opacity: 0.8;
+            z-index: 5; pointer-events: none; opacity: 0.7;
         }
-        /* 1번줄(상단) ~ 6번줄(하단) 두께 및 위치 */
         .s1 { top: 10%; height: 1px; }
         .s2 { top: 26%; height: 1.5px; }
         .s3 { top: 42%; height: 2px; }
@@ -70,44 +86,42 @@
         .s5 { top: 74%; height: 3px; }
         .s6 { top: 90%; height: 3.5px; }
 
-        /* 지판 터치 영역 */
-        .fret-cell {
-            flex: 1; position: relative; z-index: 15;
-            display: flex; justify-content: center; align-items: center;
-        }
+        .fret-cell { flex: 1; position: relative; z-index: 15; }
 
-        /* 가상 손가락 (알파벳 표기) */
+        /* 손가락 마크 */
         .finger-mark {
-            width: 30px; height: 30px; background: #ffeb3b; border-radius: 50%;
-            color: black; font-weight: bold; font-size: 13px;
+            width: 32px; height: 32px; background: #ffeb3b; border-radius: 50%;
+            color: black; font-weight: bold; font-size: 14px;
             display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 0 10px #ffeb3b;
+            box-shadow: 0 0 12px #ffeb3b; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
         }
 
         .watermark {
-            position: fixed; bottom: 15px; right: 20px;
-            font-size: 13px; color: #64ffda; opacity: 0.5;
+            position: fixed; bottom: 10px; left: 10px;
+            font-size: 11px; color: #64ffda; opacity: 0.4;
         }
 
-        .info { text-align: center; color: #8892b0; font-size: 14px; margin-top: 20px; }
+        .guide-text { position: fixed; top: 20px; width: 100%; text-align: center; color: #8892b0; font-size: 13px; }
     </style>
 </head>
 <body>
 
-    <div class="info">지판을 눌러 코드를 잡고 오른쪽을 쓸어 넘기세요 (Stroke)</div>
+    <div class="guide-text">지판을 옆으로 밀어 13프렛까지 확인하세요!</div>
 
-    <div class="guitar-body">
-        <div class="headstock">
-            <div class="peg"></div><div class="peg"></div>
-            <div class="peg"></div><div class="peg"></div>
-            <div class="peg"></div><div class="peg"></div>
+    <div class="main-wrapper">
+        <div class="fretboard-scroll" id="scrollArea">
+            <div class="headstock">
+                <div class="peg"></div><div class="peg"></div><div class="peg"></div>
+                <div style="font-size: 8px; text-align: center; color: #444;">SONG LAB</div>
+                <div class="peg"></div><div class="peg"></div><div class="peg"></div>
+            </div>
+            <div class="fretboard" id="fretboard">
+                <div class="nut"></div>
+            </div>
         </div>
 
-        <div class="fretboard" id="fretboard">
-            <div class="nut"></div>
-        </div>
-
-        <div class="stroke-box" id="strokeBox">
+        <div class="stroke-fixed" id="strokeBox">
             <div class="string s1"></div><div class="string s2"></div>
             <div class="string s3"></div><div class="string s4"></div>
             <div class="string s5"></div><div class="string s6"></div>
@@ -119,20 +133,19 @@
 <script>
     const fretboard = document.getElementById('fretboard');
     const strokeBox = document.getElementById('strokeBox');
+    const scrollArea = document.getElementById('scrollArea');
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    const openNotes = ['E', 'B', 'G', 'D', 'A', 'E']; // 1번~6번줄
+    const openNotes = ['E', 'B', 'G', 'D', 'A', 'E'];
     const openFreqs = [329.63, 246.94, 196.00, 146.83, 110.00, 82.41];
     const notesArr = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-    // 현재 각 줄의 프렛 상태 (0은 안 누름)
     let currentChords = [0, 0, 0, 0, 0, 0];
 
-    // 1. 지판 및 터치 영역 생성
+    // 1. 지판 생성 (1~13프렛)
     for (let f = 1; f <= 13; f++) {
         const fret = document.createElement('div');
         fret.className = 'fret';
-        fret.style.minWidth = (90 * Math.pow(0.945, f)) + 'px';
         
         const num = document.createElement('div');
         num.className = 'fret-num'; num.innerText = f;
@@ -141,31 +154,25 @@
         for (let s = 0; s < 6; s++) {
             const cell = document.createElement('div');
             cell.className = 'fret-cell';
-            cell.dataset.string = s;
-            cell.dataset.fret = f;
             
             cell.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const sIdx = parseInt(cell.dataset.string);
-                const fIdx = parseInt(cell.dataset.fret);
-                
-                // 토글 로직
-                currentChords[sIdx] = (currentChords[sIdx] === fIdx) ? 0 : fIdx;
-                updateVisuals();
+                e.stopPropagation(); // 스크롤 방해 금지
+                currentChords[s] = (currentChords[s] === f) ? 0 : f;
+                renderMarks();
             });
             fret.appendChild(cell);
         }
         fretboard.appendChild(fret);
     }
 
-    // 줄 추가 (시각용)
+    // 지판 위에도 줄 그리기
     for (let s = 1; s <= 6; s++) {
         const l = document.createElement('div');
         l.className = `string s${s}`;
         fretboard.appendChild(l);
     }
 
-    function updateVisuals() {
+    function renderMarks() {
         document.querySelectorAll('.finger-mark').forEach(m => m.remove());
         currentChords.forEach((fret, sIdx) => {
             if (fret > 0) {
@@ -173,8 +180,6 @@
                 const targetCell = targetFret.querySelectorAll('.fret-cell')[sIdx];
                 const mark = document.createElement('div');
                 mark.className = 'finger-mark';
-                
-                // 음이름 계산
                 const baseIdx = notesArr.indexOf(openNotes[sIdx]);
                 mark.innerText = notesArr[(baseIdx + fret) % 12];
                 targetCell.appendChild(mark);
@@ -182,53 +187,43 @@
         });
     }
 
-    // 2. 스트로크 로직 (음정 반영)
+    // 2. 사운드 및 스트로크 로직
     function playNote(sIdx, delay = 0) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        
         const fret = currentChords[sIdx];
         const frequency = openFreqs[sIdx] * Math.pow(2, fret / 12);
         
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        
-        osc.type = (sIdx > 3) ? 'sine' : 'triangle'; // 저음은 부드럽게, 고음은 선명하게
+        osc.type = (sIdx > 3) ? 'sine' : 'triangle';
         osc.frequency.setValueAtTime(frequency, audioCtx.currentTime + delay);
-        
-        gain.gain.setValueAtTime(0.5, audioCtx.currentTime + delay);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 1.2);
-        
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 1);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start(audioCtx.currentTime + delay);
-        osc.stop(audioCtx.currentTime + delay + 1.2);
+        osc.stop(audioCtx.currentTime + delay + 1);
     }
 
-    // 터치 이동 감지 (진짜 스트로크)
     let startY = 0;
     strokeBox.addEventListener('touchstart', (e) => {
         startY = e.touches[0].clientY;
+        e.preventDefault();
     });
 
     strokeBox.addEventListener('touchend', (e) => {
         const endY = e.changedTouches[0].clientY;
-        const distance = endY - startY;
-
-        if (Math.abs(distance) > 20) {
-            // 다운 스트로크 (위에서 아래로)
-            if (distance > 0) {
-                for(let i=0; i<6; i++) playNote(i, i * 0.05);
-            } 
-            // 업 스트로크 (아래에서 위로)
-            else {
-                for(let i=5; i>=0; i--) playNote(i, (5-i) * 0.05);
-            }
+        const diff = endY - startY;
+        if (Math.abs(diff) > 20) {
+            if (diff > 0) for(let i=0; i<6; i++) playNote(i, i * 0.05); // 다운
+            else for(let i=5; i>=0; i--) playNote(i, (5-i) * 0.05); // 업
         } else {
-            // 그냥 터치 시에도 소리 나게 (피킹)
-            for(let i=0; i<6; i++) playNote(i, 0);
+            for(let i=0; i<6; i++) playNote(i, 0); // 터치 피킹
         }
     });
 
+    // 지판 스크롤 시 터치 이벤트가 씹히지 않도록 처리
+    scrollArea.addEventListener('touchmove', (e) => { e.stopPropagation(); }, {passive: true});
 </script>
 </body>
 </html>
